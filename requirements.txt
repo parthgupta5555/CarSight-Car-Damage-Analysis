@@ -5,3 +5,7 @@ pillow
 pandas
 plotly
 grad-cam
+scikit-learn
+optuna
+matplotlib
+jupyter
