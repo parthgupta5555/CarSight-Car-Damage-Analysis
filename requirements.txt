@@ -1,0 +1,7 @@
+torch
+torchvision
+streamlit
+pillow
+pandas
+plotly
+grad-cam
