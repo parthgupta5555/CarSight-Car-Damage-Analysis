@@ -1,437 +1,299 @@
-# CarSight --- Intelligent Car Damage Analysis
+# CarSight: Intelligent Car Damage Analysis
 
-```{=html}
+**An end-to-end computer vision project for classifying visible vehicle condition from images.**
+
+CarSight explores how deep learning can be applied to vehicle-image analysis, from model experimentation and evaluation to an interactive application. Given a car image, the application predicts one of six front/rear condition categories, presents class-wise prediction scores, and provides a Grad-CAM visualization to help interpret a selected prediction.
+
+The project brings together **data preparation, CNN experimentation, transfer learning, hyperparameter tuning, model evaluation, explainability, and Streamlit deployment**.
+
 <p align="center">
-```
-`<strong>`{=html}A computer-vision proof of concept for classifying
-visible car condition from images.`</strong>`{=html}
-```{=html}
+  <img src="screenshots/home%20page.png" alt="CarSight application home page" width="900">
 </p>
-```
-CarSight is a deep-learning application that analyzes an uploaded car
-image and predicts one of six front/rear condition categories. It also
-presents class-wise prediction scores and a Grad-CAM visualization to
-help inspect which image regions influenced a selected model output.
 
-The project combines model experimentation in PyTorch with an
-interactive Streamlit application.
+<p align="center">
+  <strong>Technologies</strong><br>
+  Python · PyTorch · Torchvision · Scikit-learn · Optuna · Streamlit · Grad-CAM
+</p>
 
-**GitHub Repository:** [https://github.com/parthgupta5555/CarSight-Car-Damage-Analysis](https://github.com/parthgupta5555/CarSight-Car-Damage-Analysis)
+**Repository:** [CarSight on GitHub](https://github.com/parthgupta5555/CarSight-Car-Damage-Analysis)
 
-------------------------------------------------------------------------
+---
+
+<p align="center">
+  <a href="https://carsight-car-damage-analysis-srheuudkyylif3kvaw3bye.streamlit.app/">
+    <strong>🚀 Live Demo — Try CarSight</strong>
+  </a>
+</p>
 
 ## Contents
 
--   [Project Overview](#project-overview)
--   [Application Screenshots](#application-screenshots)
--   [Key Features](#key-features)
--   [Classification Categories](#classification-categories)
--   [How It Works](#how-it-works)
--   [Model Development](#model-development)
--   [Evaluation Snapshot](#evaluation-snapshot)
--   [Grad-CAM Explainability](#grad-cam-explainability)
--   [Project Structure](#project-structure)
--   [Installation](#installation)
--   [Run CarSight](#run-carsight)
--   [Technologies](#technologies)
--   [Limitations and Future
-    Improvements](#limitations-and-future-improvements)
+- [Project overview](#project-overview)
+- [Application preview](#application-preview)
+- [Problem and classification categories](#problem-and-classification-categories)
+- [Project workflow](#project-workflow)
+- [Model experimentation](#model-experimentation)
+- [Application and inference](#application-and-inference)
+- [Evaluation](#evaluation)
+- [Explainability with Grad-CAM](#explainability-with-grad-cam)
+- [Repository structure](#repository-structure)
+- [Getting started](#getting-started)
+- [Dataset](#dataset)
+- [Scope and future improvements](#scope-and-future-improvements)
 
-------------------------------------------------------------------------
+## Project overview
 
-## Project Overview
+CarSight is a six-class image-classification proof of concept. It focuses on recognizing broad visible vehicle-condition categories from an input image and presenting the result in an accessible interface.
 
-The goal of CarSight is to build a proof of concept (POC) that
-classifies the visible condition of a car's **front or rear** using an
-image.
+| Area | What the project includes |
+|---|---|
+| Computer vision task | Multi-class image classification |
+| Model development | CNN baselines and transfer-learning experiments |
+| Experimentation | Architecture comparisons and hyperparameter search |
+| Evaluation | Overall and class-wise validation metrics |
+| Explainability | Grad-CAM heatmap visualization |
+| Application | Interactive Streamlit interface |
+| Prediction output | Predicted category and class-wise scores |
 
-The model predicts one of six predefined classes:
+### Key capabilities
 
--   Front Breakage
--   Front Crushed
--   Front Normal
--   Rear Breakage
--   Rear Crushed
--   Rear Normal
+- Upload a car image in JPG, JPEG, or PNG format.
+- Predict one of six vehicle-condition categories.
+- View scores for all six classes.
+- Generate a Grad-CAM overlay for a selected class.
+- Inspect the original image alongside the visualization.
 
-The supplied project specification sets a target of at least 75%
-classification accuracy and calls for a trained model integrated into a
-Streamlit image-upload application.
+## Application preview
 
-> **Scope:** CarSight is an image-classification POC. It predicts an
-> image-level category; it does not identify exact damaged pixels,
-> estimate repair costs, or determine the full physical extent of
-> damage.
+### Home page
 
-## Application Screenshots
+![CarSight home page](screenshots/home%20page.png)
 
-### CarSight Interface
+### Prediction results
 
-![CarSight Homepage](screenshots/homepage.png)
+![CarSight prediction results](screenshots/prediction.png)
 
-### Car Damage Prediction
+### Grad-CAM visualization
 
-![Car Damage Prediction Results](screenshots/prediction.png)
+![CarSight Grad-CAM visualization](screenshots/grad-cam.png)
 
-### Grad-CAM Visual Explainability
+## Problem and classification categories
 
-![Grad-CAM Visualization](screenshots/grad-cam.png)
+The application predicts one of the following labels:
 
-## Key Features
+| Class index | Category | Description |
+|---:|---|---|
+| 0 | Front Breakage | Front view — breakage |
+| 1 | Front Crushed | Front view — crushed condition |
+| 2 | Front Normal | Front view — normal condition |
+| 3 | Rear Breakage | Rear view — breakage |
+| 4 | Rear Crushed | Rear view — crushed condition |
+| 5 | Rear Normal | Rear view — normal condition |
 
-  -----------------------------------------------------------------------
-  Capability                          Description
-  ----------------------------------- -----------------------------------
-  Image input                         Upload a car image in JPG, JPEG, or
-                                      PNG format
+The class order follows the alphabetical folder order used by `torchvision.datasets.ImageFolder`. The same order must be maintained by the trained model and inference helper.
 
-  Six-class prediction                Classify the visible front/rear
-                                      condition
+## Project workflow
 
-  Prediction scores                   Compare the model's softmax score
-                                      across all six categories
+The project follows an end-to-end workflow:
 
-  Visual explainability               Generate a Grad-CAM overlay for the
-                                      predicted or another selected class
-
-  GPU/CPU inference                   Automatically use CUDA when
-                                      available; otherwise use CPU
-
-  Interactive interface               Explore the analysis through a
-                                      Streamlit application
-  -----------------------------------------------------------------------
-
-## Classification Categories
-
-    Class index Category         Meaning
-  ------------- ---------------- ----------------------------------
-              0 Front Breakage   Front view --- breakage
-              1 Front Crushed    Front view --- crushed condition
-              2 Front Normal     Front view --- normal condition
-              3 Rear Breakage    Rear view --- breakage
-              4 Rear Crushed     Rear view --- crushed condition
-              5 Rear Normal      Rear view --- normal condition
-
-The class order is important: it follows the alphabetical folder order
-used by `torchvision.datasets.ImageFolder` and must remain consistent
-with the trained checkpoint.
-
-## How It Works
-
-``` text
-       Car image (JPG / JPEG / PNG)
-                    |
-                    v
-          Image preprocessing
-          Resize to 224 x 224
-          Normalize (ImageNet stats)
-                    |
-                    v
-          Fine-tuned ResNet50
-                    |
-                    v
-             Six class scores
-                    |
-          +---------+----------+
-          |                    |
-          v                    v
-     Top prediction       Class-wise scores
-          |                    |
-          +---------+----------+
-                    |
-                    v
-             Streamlit results
-                    |
-                    v
-           Grad-CAM explanation
+```text
+Image dataset
+     |
+     v
+Image inspection and preprocessing
+     |
+     v
+CNN and transfer-learning experiments
+     |
+     v
+Hyperparameter tuning and model selection
+     |
+     v
+Validation and class-wise evaluation
+     |
+     v
+Saved model and inference pipeline
+     |
+     v
+Streamlit application
+     |
+     +------> Predicted category and class scores
+     |
+     +------> Grad-CAM visualization
 ```
 
-1.  The user uploads a car image through the Streamlit interface.
-2.  The image is converted to RGB, resized to 224 × 224, converted to a
-    tensor, and normalized.
-3.  The trained ResNet50 classifier produces six output scores.
-4.  Softmax converts the outputs into scores that can be compared across
-    the six classes.
-5.  The application displays the predicted category, top score,
-    inference device, and class-wise score chart.
-6.  Grad-CAM can generate a heatmap overlay for the predicted category
-    or a class selected by the user.
+The notebooks contain the model-development and experimentation work, while the Python application files provide the interactive inference experience.
 
-## Model Development
+## Model experimentation
 
-Model development and experimentation were carried out in PyTorch.
+Rather than being limited to a single architecture, CarSight includes experiments with different approaches to image classification.
 
-### Architectures explored
+| Experiment | Purpose |
+|---|---|
+| Custom CNN | Establish an initial convolutional neural-network baseline |
+| Regularized CNN | Explore regularization to improve generalization |
+| EfficientNet-B0 | Evaluate a transfer-learning architecture |
+| ResNet50 | Evaluate another transfer-learning approach; selected for the current application |
 
-The training notebook includes experiments with:
+The notebooks document these experiments. The current Streamlit application uses the trained ResNet50 checkpoint; the other architectures are part of the development and comparison workflow, not separate models selectable in the deployed interface.
 
--   **Custom CNN:** a convolutional network built from convolution,
-    ReLU, and max-pooling layers.
--   **Regularized CNN:** a custom CNN variant incorporating batch
-    normalization and dropout.
--   **EfficientNet-B0:** a pretrained architecture used for
-    transfer-learning experimentation.
--   **ResNet50:** a pretrained architecture fine-tuned for the six
-    car-condition classes.
+### Hyperparameter tuning
 
-The deployed application uses the **ResNet50** checkpoint. The other
-architectures represent development experiments, not additional models
-running inside the app.
+The hyperparameter-tuning notebook uses Optuna to explore learning-rate and dropout settings. The recorded best trial was approximately:
 
-### Deployed ResNet50 configuration
+- Learning rate: `0.002107`
+- Dropout rate: `0.4451`
 
-  -----------------------------------------------------------------------
-  Component                           Configuration
-  ----------------------------------- -----------------------------------
-  Framework                           PyTorch
+The training notebook also records a final run using learning rate `0.005` and dropout `0.2`. These refer to different experiment records. The deployed model definition uses a dropout rate of `0.2`.
 
-  Backbone                            ResNet50
+### Current application model
 
-  Initialization                      ImageNet-pretrained weights during
-                                      training
+For the current inference application, the selected model is a fine-tuned ResNet50:
 
-  Fine-tuning                         Layer 4 unfrozen; earlier backbone
-                                      layers frozen
+- ImageNet-pretrained feature extractor
+- Earlier backbone layers frozen, with `layer4` fine-tuned
+- Classification head: dropout followed by a six-output linear layer
+- Input size: `224 × 224`
+- Checkpoint: `saved_model.pth`
 
-  Classification head                 Dropout (0.2) + Linear layer (2048
-                                      → 6)
+This describes the model currently integrated into the app; it is one part of the wider experimentation project.
 
-  Loss function                       Cross-entropy loss
+## Application and inference
 
-  Optimizer                           Adam
+The Streamlit application connects the uploaded image to the trained model and presents the prediction.
 
-  Final training run settings         Learning rate 0.005; dropout 0.2
-  recorded in notebook                
+1. The uploaded image is converted to RGB.
+2. It is resized to `224 × 224`.
+3. It is converted to a tensor and normalized using ImageNet mean and standard deviation.
+4. The model produces six class scores.
+5. The application displays the predicted category and class-wise scores.
+6. Grad-CAM can be used to visualize regions that influenced a selected class score.
 
-  Input resolution                    224 × 224
+The model checkpoint is loaded from `saved_model.pth` by `model_helper.py`. Keep `app.py`, `model_helper.py`, and `saved_model.pth` together in the repository root.
 
-  Output classes                      6
-  -----------------------------------------------------------------------
+## Evaluation
 
-The inference helper reconstructs the same ResNet50 architecture with
-`weights=None` and loads the trained `saved_model.pth` checkpoint. This
-avoids downloading pretrained weights again at inference time.
+The training notebook reports the following validation results on **575 samples**:
 
-### Image preprocessing
+| Metric | Score |
+|---|---:|
+| Accuracy | **79.83%** |
+| Macro precision | 0.80 |
+| Macro recall | 0.79 |
+| Macro F1-score | 0.79 |
+| Weighted F1-score | 0.80 |
 
-The inference pipeline uses:
+### Class-wise validation report
 
--   Resize to `(224, 224)`
--   Convert image to tensor
--   Normalize with ImageNet mean: `[0.485, 0.456, 0.406]`
--   Normalize with ImageNet standard deviation: `[0.229, 0.224, 0.225]`
+| Category | Precision | Recall | F1-score | Support |
+|---|---:|---:|---:|---:|
+| Front Breakage | 0.82 | 0.82 | 0.82 | 113 |
+| Front Crushed | 0.80 | 0.73 | 0.76 | 111 |
+| Front Normal | 0.84 | 0.93 | 0.89 | 105 |
+| Rear Breakage | 0.75 | 0.79 | 0.77 | 82 |
+| Rear Crushed | 0.70 | 0.78 | 0.74 | 88 |
+| Rear Normal | 0.90 | 0.70 | 0.79 | 76 |
 
-The training notebook also applies random horizontal flipping, random
-rotation, and color jitter as augmentation.
+**Evaluation note:** These figures are validation results reported by the training notebook, not results from a separate untouched test set. The notebook applies random image augmentation before splitting the dataset, meaning the validation subset also receives random augmentation. A stronger evaluation would use separate training and validation transforms, a reproducible stratified split, and an independent test set. The reported score should therefore be treated as an experimental validation snapshot rather than a measure of guaranteed real-world performance.
 
-### Hyperparameter experimentation
+## Explainability with Grad-CAM
 
-Optuna was used for a 20-trial search over learning rate and dropout
-rate. The notebook records a best trial with a learning rate of
-approximately `0.002107` and dropout of approximately `0.4451`. The
-final training run documented separately in the training notebook used a
-learning rate of `0.005` and dropout of `0.2`.
+CarSight includes Grad-CAM to provide a visual aid for interpreting a selected model output. It produces a heatmap overlay that highlights image regions contributing to that class score.
 
-These are experiment records; the final checkpoint and its matching
-model definition are the source of truth for inference.
+Grad-CAM can help inspect model behavior, but it is not a damage-segmentation mask. It does not identify exact damage boundaries or prove that the model is relying on the right visual features.
 
-## Evaluation Snapshot
+## Repository structure
 
-The training notebook reports the following classification report for
-**575 validation samples**:
-
-  Metric                     Score
-  ------------------- ------------
-  Accuracy              **79.83%**
-  Macro precision             0.80
-  Macro recall                0.79
-  Macro F1-score              0.79
-  Weighted F1-score           0.80
-
-### Per-class results
-
-The report uses the six class indices in the order listed above.
-
-  Category           Precision   Recall   F1-score   Support
-  ---------------- ----------- -------- ---------- ---------
-  Front Breakage          0.82     0.82       0.82       113
-  Front Crushed           0.80     0.73       0.76       111
-  Front Normal            0.84     0.93       0.89       105
-  Rear Breakage           0.75     0.79       0.77        82
-  Rear Crushed            0.70     0.78       0.74        88
-  Rear Normal             0.90     0.70       0.79        76
-
-**Important evaluation note:** these figures are validation results from
-the supplied notebook, not results from a separate untouched test set.
-The notebook creates a random 75/25 split from an `ImageFolder` dataset
-that has random augmentation in its transform. Consequently, the
-validation subset also receives random augmentation. A stronger
-evaluation should use separate training and validation
-datasets/transforms, a reproducible split, and an untouched test set.
-Treat the reported score as an experimental validation snapshot rather
-than a guarantee of real-world performance.
-
-## Grad-CAM Explainability
-
-CarSight integrates Grad-CAM using the final convolutional block of
-ResNet50 (`layer4[-1]`).
-
-The application lets the user select one of the six categories and view:
-
--   The original uploaded image
--   A Grad-CAM heatmap overlay for the selected class
-
-Grad-CAM highlights regions that influence a class score. It is useful
-for inspecting model behavior and spotting possible reliance on
-backgrounds or unrelated visual cues.
-
-> Grad-CAM is an interpretation aid, not a pixel-level damage
-> segmentation mask. A heatmap does not prove that the model has learned
-> the correct visual concept or establish the exact physical extent of
-> damage.
-
-## Project Structure
-
-Keep the following runtime files in the same directory:
-
-``` text
-CarSight/
-├── app.py                  # Streamlit user interface
-├── model_helper.py         # Model architecture, loading, preprocessing, prediction
-├── saved_model.pth         # Trained ResNet50 state-dict checkpoint
-├── README.md
-├── screenshots/
-│   ├── homepage.png
-│   ├── prediction.png
-│   └── grad-cam.png
+```text
+CarSight-Car-Damage-Analysis/
 │
-├── damage_prediction.ipynb       # Model training and evaluation experiments
-├── hyperparameter_tunning.ipynb  # Optuna hyperparameter search
-└── gradcam_car_damage.ipynb      # Grad-CAM experiment
+├── app.py
+├── model_helper.py
+├── saved_model.pth
+├── requirements.txt
+├── README.md
+├── LICENSE
+│
+├── notebooks/
+│   ├── damage_prediction.ipynb
+│   ├── hyperparameter_tunning.ipynb
+│   └── gradcam_car_damage.ipynb
+│
+└── screenshots/
+    ├── home page.png
+    ├── prediction.png
+    └── grad-cam.png
 ```
 
-The notebook filenames above describe their roles; use the actual
-filenames in your local repository if they differ.
+The notebook names shown above reflect the project structure discussed for this repository. If the files in your folder have different names, keep their actual names or update this section to match them.
 
-## Installation
+## Getting started
 
 ### 1. Clone the repository
 
-``` bash
+```bash
 git clone https://github.com/parthgupta5555/CarSight-Car-Damage-Analysis.git
 cd CarSight-Car-Damage-Analysis
 ```
 
-### 2. Create and activate a virtual environment (recommended)
+### 2. Create and activate a virtual environment
 
-**Windows --- Command Prompt**
+**Windows — Git Bash:**
 
-``` cmd
+```bash
 python -m venv .venv
+source .venv/Scripts/activate
+```
+
+**Windows — Command Prompt:**
+
+```bat
 .venv\Scripts\activate
 ```
 
-**macOS / Linux**
+**macOS / Linux:**
 
-``` bash
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
 ### 3. Install dependencies
 
-``` bash
+```bash
 python -m pip install --upgrade pip
-python -m pip install torch torchvision streamlit pillow pandas plotly grad-cam
+python -m pip install -r requirements.txt
 ```
 
-Install a PyTorch build appropriate for your machine from the official
-PyTorch installation selector if you need a specific CUDA-enabled build.
-CPU inference is supported as well.
+For GPU acceleration, install a PyTorch and Torchvision build compatible with your CUDA setup by following the [official PyTorch installation guide](https://pytorch.org/get-started/locally/). CPU inference may also be used.
 
-## Run CarSight
+### 4. Run the application
 
-Make sure `app.py`, `model_helper.py`, and `saved_model.pth` are in the
-same directory, then run:
+Ensure that `app.py`, `model_helper.py`, and `saved_model.pth` are in the same directory, then run:
 
-``` bash
+```bash
 python -m streamlit run app.py
 ```
 
-Streamlit will print a local URL in the terminal (usually
-`http://localhost:8501`). Open it in your browser.
-
-### Using the application
-
-1.  Upload a JPG, JPEG, or PNG car image.
-2.  Select **Analyze car image**.
-3.  Review the predicted category and top prediction score.
-4.  Compare the six class-wise scores.
-5.  In the Grad-CAM section, choose a class and select **Generate
-    Grad-CAM**.
-6.  Compare the original image with the heatmap overlay.
-
-### Checkpoint requirement
-
-The application expects a file named:
-
-``` text
-saved_model.pth
-```
-
-Place the trained checkpoint beside `app.py`. The checkpoint must match
-the ResNet50 architecture, six-class ordering, and classifier-head
-configuration used in `model_helper.py`.
-
-## Technologies
-
--   **Python** --- application and model development
--   **PyTorch** --- deep-learning model training and inference
--   **Torchvision** --- pretrained ResNet50, image transforms, and
-    dataset utilities
--   **Optuna** --- hyperparameter search
--   **Grad-CAM** --- visual explainability
--   **Streamlit** --- interactive application
--   **Pandas** --- score-table preparation
--   **Plotly** --- class-wise prediction visualization
--   **Pillow** --- image loading and conversion
--   **scikit-learn** --- classification metrics and confusion matrix in
-    evaluation
-
-## Limitations and Future Improvements
-
-Potential next steps:
-
--   Build separate training and validation transforms so validation
-    images are not randomly augmented.
--   Use a fixed random seed and stratified splitting to improve
-    reproducibility and class balance.
--   Evaluate on a separate, untouched test set and report per-class
-    metrics.
--   Inspect confusion-matrix errors, especially between breakage and
-    crushed categories.
--   Compare candidate architectures using the same data split and
-    evaluation protocol.
--   Test on varied real-world images, lighting conditions, viewpoints,
-    and backgrounds.
--   Consider object detection or segmentation if the product requirement
-    expands from image-level classification to locating damaged regions.
+Open the local URL printed by Streamlit, usually `http://localhost:8501`.
 
 ## Dataset
 
-The dataset was provided as part of the guided Deep Learning
-project by Codebasics.
+The dataset was provided as part of the guided Deep Learning project by Codebasics. It contains images organized into the six vehicle-condition categories listed above.
 
-It contains images belonging to six car-condition categories.
-The original dataset is not included in this repository.
+The original dataset is not included in this repository. Please refer to the original course materials for dataset access and usage permissions.
 
-Please refer to the original course materials for dataset access.
+## Scope and future improvements
 
-------------------------------------------------------------------------
+CarSight is a learning and portfolio proof of concept for image classification. It predicts broad image-level categories and should not be treated as a professional vehicle-inspection or insurance-assessment system.
 
-## Project Note
+Potential next steps include:
 
-CarSight demonstrates an end-to-end computer-vision workflow: dataset
-preparation, model experimentation, transfer learning, hyperparameter
-search, evaluation, inference, and visual explainability through a
-Streamlit interface.
+- Re-evaluate using a clean, reproducible train/validation/test split.
+- Compare model architectures using the same data splits and evaluation procedure.
+- Add stronger error analysis for visually similar classes.
+- Explore object detection or segmentation for damage localization.
+- Evaluate robustness on images captured in varied lighting, angles, and environments.
+
+---
+
+*Built as a computer vision and deep learning project, covering experimentation through application development.*
